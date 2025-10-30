@@ -1,0 +1,45 @@
+<div class="edit-post-container">
+    <div class="input-label-container">
+        <input value=<%= post.title %> type="text" id="edit-post-title">
+        <label for="edit-post-title">Title</label>
+    </div>
+    <div class="input-label-container">
+        <input value=<%= post.content %> type="text" id="edit-post-content">
+        <label for="edit-post-content">Content</label>
+    </div>
+    <div class="edit-btn-container">
+        <button postId=<%= post.id %> id="edit-post-btn">Edit</button>
+    </div>
+</div>
+
+<script>
+    const editTitleContainer = document.getElementById("edit-post-title")
+    const editContentContainer = document.getElementById("edit-post-content")
+    const editPostBtn = document.getElementById("edit-post-btn")
+
+
+    editPostBtn.addEventListener("click", e=> {
+        if(editContentContainer?.value?.trim() == '' || editTitleContainer?.value?.trim() == ''){
+            return alert("Post contents cannot be empty")
+        }
+        handleEditPost(e.target.getAttribute('postId'))
+    })
+
+    async function handleEditPost(postId){
+        const response = await fetch(`/post/edit/${postId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                title: editTitleContainer.value,
+                content: editContentContainer.value
+            })
+        });
+        const result = await response.json();
+        if(!result.success){
+            return alert(result.msg)
+        }
+        window.location.href = '/'
+    }
+</script>

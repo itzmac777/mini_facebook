@@ -1,0 +1,126 @@
+<div class="form-container">
+    <div class="form-selector-container">
+        <input type="radio" checked name="form-selector" id="signin">
+        <label for="signin">Sign In</label>
+        <input type="radio" name="form-selector" id="signup">
+        <label for="signup">Sign Up</label>
+    </div>
+    <div style="display: none;" class="signup-form">
+        <div class="input-label-container">
+            <label for="signup-name">Name</label>
+            <input id="signup-name" type="text" placeholder="Name">
+        </div>
+        <div class="input-label-container">
+            <label for="signup-email">Email</label>
+            <input id="signup-email" type="text" placeholder="Email">
+        </div>
+        <div class="input-label-container">
+            <label for="signup-password">Password</label>
+            <input id="signup-password" type="text" placeholder="Password">
+        </div>
+        <div class="signup-btn-container">
+            <button id="signup-btn">Sign Up</button>
+        </div>
+    </div>
+    <div class="signin-form">
+        <div class="input-label-container">
+            <label for="signin-email">Email</label>
+            <input id="signin-email" type="text" placeholder="Email">
+        </div>
+        <div class="input-label-container">
+            <label for="signin-password">Password</label>
+            <input id="signin-password" type="text" placeholder="Password">
+        </div>
+        <div class="signin-btn-container">
+            <button id="signin-btn">Sign In</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const signupFormContainer = document.querySelector('.signup-form')
+    const signinFormContainer = document.querySelector('.signin-form')
+    const formSelectorInput = document.querySelectorAll(".form-selector-container input")
+
+    const signupBtn = document.getElementById('signup-btn')
+    const signupName = document.getElementById('signup-name')
+    const signupEmail = document.getElementById('signup-email')
+    const signupPassword = document.getElementById('signup-password')
+
+    
+    const signinBtn = document.getElementById('signin-btn')
+    const signinEmail = document.getElementById('signin-email')
+    const signinPassword = document.getElementById('signin-password')
+
+    formSelectorInput.forEach(radio=> radio.addEventListener("change", e=> {
+        updateFormState(e.target.id)
+    }))
+
+    signupBtn.addEventListener('click', async(e)=> {
+        if(signupName.value.trim() == '' 
+            || signupEmail.value.trim() == ''
+            || signupPassword.value.trim() == ''
+        ){
+            return alert("Credentials cannot be empty")
+        }
+        handleSignup()
+    })
+
+    signinBtn.addEventListener('click', async(e)=> {
+        if( signinEmail.value.trim() == ''
+            || signinPassword.value.trim() == ''
+        ){
+            return alert("Credentials cannot be empty")
+        }
+        handleSignin()
+    })
+
+    async function handleSignup() {
+        const response = await fetch('/user/signup', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                name: signupName.value,
+                email: signupEmail.value,
+                password: signupPassword.value
+            })
+        });
+        const result = await response.json();
+        if(!result.success){
+            return alert(result.msg)
+        }
+        window.location.href = '/'
+    }
+
+    async function handleSignin() {
+        const response = await fetch('/user/signin', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                email: signinEmail.value,
+                password: signinPassword.value
+            })
+        });
+        const result = await response.json();
+        console.log(response.json)
+        if(!result.success){
+            return alert(result.msg)
+        }
+        window.location.href = '/'
+    }
+
+    function updateFormState(id){
+        if(id == 'signup'){
+            signinFormContainer.style.display = 'none';
+            signupFormContainer.style.display = 'block';
+        } else{
+            signinFormContainer.style.display = 'block';
+            signupFormContainer.style.display = 'none';
+        }
+    }
+
+</script>
