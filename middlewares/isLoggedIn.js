@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
   }
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) return res.send("Some error occured")
-    req.user = decoded
+    req.user = decoded._doc
   })
   next()
 }

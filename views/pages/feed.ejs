@@ -16,8 +16,8 @@
             <div class="post">
                 <div class="post-name"><%= post?.title %></div>
                 <div class="post-content"><%= post?.content %></div>
-                <div class="post-posted-by">Posted By: <%= post?.postedBy %></div>
-                <% if(post.postedBy == user){ %>
+                <div class="post-posted-by">Posted By: <%= post?.author?.name %></div>
+                <% if(post.author._id == user._id){ %>
                     <button postId=<%= `${post.id}` %> class="delete-post-btn">Delete</button>
                     <button postId=<%= `${post.id}` %> class="edit-post-btn">Edit</button>
                 <% } %>
