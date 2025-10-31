@@ -1,7 +1,7 @@
 const express = require("express")
 const app = express()
 const PORT = 3000
-const SECRET_KEY = "project_mini_facebook"
+const SECRET_KEY = process.env.SECRET_KEY
 const SALT_ROUNDS = 10
 const ejs = require("ejs")
 const path = require("path")
@@ -14,7 +14,9 @@ const dotenv = require("dotenv")
 const mongoose = require("mongoose")
 const User = require("./models/userModel")
 const Post = require("./models/postModel")
+const { wrapTC, isParamsEmpty } = require("./utils/helper")
 
+//===============MIDDLEWARES===============//
 app.set("view engine", "ejs")
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
@@ -22,70 +24,52 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 dotenv.config()
 
+//===============DB & SERVER CONNECTION===============//
 main().catch((err) => console.log(err))
+app.listen(PORT, () => console.log("server is listening to port:", PORT))
 
-app.get("/", isLoggedIn, async (req, res) => {
-  try {
-    const posts = await Post.find().populate("author")
-    posts.forEach((post) => (post.author.hash = null))
-    res.render("boilerplate.ejs", { page: "feed", user: req.user, posts })
-  } catch (err) {
-    console.log(err)
-  }
+//===============ROUTES===============//
+//FEED & PROFILE ROUTE
+app.get("/", isLoggedIn, (req, res) => {
+  wrapTC(req, res, handleFeedPage)
+})
+app.get("/profile", isLoggedIn, (req, res) => {
+  wrapTC(req, res, handleProfilePage)
 })
 
-app.get("/profile", isLoggedIn, async (req, res) => {
-  res.render("boilerplate.ejs", { page: "profile", user: req.user })
+//AUTH ROUTES
+app.get("/auth", (req, res) => {
+  if (req?.cookies?.token) return res.redirect("/auth/logout")
+  return res.render("boilerplate.ejs", { page: "auth" })
 })
-
-app.get("/login", (req, res) => {
-  return res.render("boilerplate.ejs", { page: "login" })
-})
-
-app.get("/user/logout", async (req, res) => {
+app.get("/auth/logout", async (req, res) => {
   res.clearCookie("token")
-  res.redirect("/profile")
+  res.redirect("/auth")
 })
+app.post("/auth/signup", async (req, res) => wrapTC(req, res, handleSignup))
+app.post("/auth/signin", async (req, res) => wrapTC(req, res, handleSignin))
 
-app.post("/post/create", isLoggedIn, async (req, res) => {
-  const postData = req?.body
-  const author = await User.findById(req.user._id)
-  if (postData == null)
-    return res.json({ success: false, msg: "Posts cannot be empty" })
-  if (!postData?.title.trim() || !postData?.content.trim())
-    return res.json({ success: false, msg: "Posts cannot be empty" })
-  try {
-    const newPostData = await Post.insertMany([
-      {
-        title: postData.title,
-        content: postData.content,
-        author: author._id,
-      },
-    ])
-    res.json({ success: true, postData: newPostData })
-  } catch (err) {
-    console.log(err)
-  }
-})
+//POST ROUTES
+app.post("/post/create", isLoggedIn, async (req, res) =>
+  wrapTC(req, res, handlePostCreate)
+)
+app.delete("/post/delete/:postId", isLoggedIn, async (req, res) =>
+  wrapTC(req, res, handlePostDelete)
+)
+app.get("/post/edit/:postId", isLoggedIn, async (req, res) =>
+  wrapTC(req, res, handlePostEditRedirect)
+)
+app.patch("/post/edit/:postId", isLoggedIn, async (req, res) =>
+  wrapTC(req, res, handlePostEdit)
+)
 
-app.delete("/post/delete/:postId", isLoggedIn, async (req, res) => {
-  try {
-    const postId = req?.params?.postId
-    if (!postId) {
-      return res.json({ success: false, msg: "Unsuccessful deletion" })
-    }
-    const postData = await Post.findById(postId)
-    if (postData.author.toString() != req.user._id) {
-      return res.json({ success: false, msg: "Not authorized" })
-    }
-    await Post.findByIdAndDelete(postId)
-    return res.json({ success: true, msg: "Deletion Successful" })
-  } catch (err) {
-    console.log(err)
-  }
-})
+async function main() {
+  await mongoose.connect(process.env.MONGO_URI)
+  console.log("connected to DB!")
+}
 
-app.get("/post/edit/:postId", isLoggedIn, async (req, res) => {
+//===============HANDLER FUNCTIONS===============//
+async function handlePostEditRedirect(req, res) {
   const postId = req?.params?.postId
   if (!postId) {
     return res.json({ success: false, msg: "Unsuccessful edit" })
@@ -99,87 +83,73 @@ app.get("/post/edit/:postId", isLoggedIn, async (req, res) => {
     post: postData,
     user: req.user,
   })
-})
+}
 
-app.patch("/post/edit/:postId", isLoggedIn, async (req, res) => {
-  try {
-    const postId = req?.params?.postId
-    const newPostData = req.body
-    if (!postId) {
-      return res.json({ success: false, msg: "Unsuccessful edit" })
-    }
-    if (!newPostData.title.trim() || !newPostData.content.trim()) {
-      return res.json({ success: false, msg: "Posts content cannot be empty" })
-    }
-    const postData = await Post.findById(postId)
-    if (postData.author.toString() != req.user._id) {
-      return res.json({ success: false, msg: "Not authorized" })
-    }
-    postData.title = newPostData.title
-    postData.content = newPostData.content
-    await postData.save()
-    return res.json({ success: true, msg: "Edited successfully" })
-  } catch (err) {
-    console.log(err)
+async function handlePostEdit(req, res) {
+  const postId = req?.params?.postId
+  const newPostData = req.body
+  if (!postId) {
+    return res.json({ success: false, msg: "Unsuccessful edit" })
   }
-})
-
-app.post("/user/signup", async (req, res) => {
-  const credentials = req.body
-  if (credentials == null)
-    return res.json({ success: false, msg: "Credentials cannot be empty" })
-  if (
-    !credentials?.name.trim() ||
-    !credentials?.email.trim() ||
-    !credentials?.password.trim()
-  )
-    return res.json({ success: false, msg: "Credentials cannot be empty" })
-  const originalCredentials = await User.findOne({ email: credentials?.email })
-  if (originalCredentials) {
-    return res.json({
-      success: false,
-      msg: "Account already exists. Please login",
-    })
+  if (!newPostData.title.trim() || !newPostData.content.trim()) {
+    return res.json({ success: false, msg: "Posts content cannot be empty" })
   }
-
-  if (!emailValidator.validate(credentials.email)) {
-    return res.json({
-      success: false,
-      msg: "Please enter a valid email",
-    })
+  const postData = await Post.findById(postId)
+  if (postData.author.toString() != req.user._id) {
+    return res.json({ success: false, msg: "Not authorized" })
   }
+  postData.title = newPostData.title
+  postData.content = newPostData.content
+  await postData.save()
+  return res.json({ success: true, msg: "Edited successfully" })
+}
 
-  bcrypt.hash(credentials.password, SALT_ROUNDS, async (err, hash) => {
-    if (err) {
-      return res.json({
-        success: false,
-        msg: "Some error occured",
-      })
-    }
-    try {
-      const newUserData = await User.insertMany([
-        { name: credentials.name, email: credentials.email, hash },
-      ])
-      const token = jwt.sign({ ...newUserData[0] }, SECRET_KEY)
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        maxAgeL: 15 * 60 * 1000,
-      })
-      res.json({ success: true, msg: token })
-    } catch (err) {
-      console.log(err)
-    }
-  })
-})
+async function handleFeedPage(req, res) {
+  const posts = await Post.find().populate("author", "-hash")
+  res.render("boilerplate.ejs", { page: "feed", user: req.user, posts })
+}
 
-app.post("/user/signin", async (req, res) => {
-  const credentials = req.body
-  if (credentials == null)
+async function handleProfilePage(req, res) {
+  const userData = await User.findById(req.user._id).select("-hash")
+  res.render("boilerplate.ejs", { page: "profile", user: userData })
+}
+
+async function handlePostCreate(req, res) {
+  const postData = req?.body
+  const author = await User.findById(req.user._id)
+  if (postData == null)
+    return res.json({ success: false, msg: "Posts cannot be empty" })
+  if (!postData?.title.trim() || !postData?.content.trim())
+    return res.json({ success: false, msg: "Posts cannot be empty" })
+  const newPostData = await Post.insertMany([
+    {
+      title: postData.title,
+      content: postData.content,
+      author: author._id,
+    },
+  ])
+  res.json({ success: true, postData: newPostData })
+}
+
+async function handlePostDelete(req, res) {
+  const postId = req?.params?.postId
+  if (!postId) {
+    return res.json({ success: false, msg: "Post not found" })
+  }
+  const postData = await Post.findById(postId)
+  if (postData.author.toString() != req.user._id) {
+    return res.json({ success: false, msg: "Not authorized" })
+  }
+  await Post.findByIdAndDelete(postId)
+  return res.json({ success: true, msg: "Deletion Successful" })
+}
+
+async function handleSignin(req, res) {
+  const credentials = req?.body
+  const isEmpty = isParamsEmpty(credentials)
+  if (isEmpty)
     return res.json({ success: false, msg: "Credentials cannot be empty" })
-  if (!credentials?.email?.trim() || !credentials?.password?.trim())
-    return res.json({ success: false, msg: "Credentials cannot be empty" })
+
   const originalCredentials = await User.findOne({ email: credentials?.email })
   if (!originalCredentials) {
     return res.json({
@@ -203,7 +173,10 @@ app.post("/user/signin", async (req, res) => {
           msg: "Invalid credentials",
         })
       }
-      const token = jwt.sign({ ...originalCredentials }, SECRET_KEY)
+      const token = jwt.sign(
+        { _id: originalCredentials._id, email: originalCredentials.email },
+        process.env.SECRET_KEY
+      )
       res.cookie("token", token, {
         httpOnly: true,
         secure: true,
@@ -213,13 +186,49 @@ app.post("/user/signin", async (req, res) => {
       return res.json({ success: true, msg: token })
     }
   )
-})
-
-async function main() {
-  await mongoose.connect(process.env.MONGO_URI)
-  console.log("connected to DB!")
 }
 
-app.listen(PORT, () => {
-  console.log("server is listening to port:", PORT)
-})
+async function handleSignup(req, res) {
+  const credentials = req?.body
+  const isEmpty = isParamsEmpty(credentials)
+  if (isEmpty)
+    return res.json({ success: false, msg: "Credentials cannot be empty" })
+
+  const originalCredentials = await User.findOne({ email: credentials?.email })
+  if (originalCredentials) {
+    return res.json({
+      success: false,
+      msg: "Account already exists. Please login",
+    })
+  }
+
+  if (!emailValidator.validate(credentials.email)) {
+    return res.json({
+      success: false,
+      msg: "Please enter a valid email",
+    })
+  }
+
+  bcrypt.hash(credentials.password, SALT_ROUNDS, async (err, hash) => {
+    if (err) {
+      return res.json({
+        success: false,
+        msg: "Some error occured",
+      })
+    }
+    const newUserData = await User.insertMany([
+      { name: credentials.name, email: credentials.email, hash },
+    ])
+    const token = jwt.sign(
+      { _id: newUserData[0]._id, email: newUserData[0].email },
+      process.env.SECRET_KEY
+    )
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAgeL: 15 * 60 * 1000,
+    })
+    res.json({ success: true, msg: token })
+  })
+}

@@ -76,7 +76,7 @@
     })
 
     async function handleSignup() {
-        const response = await fetch('/user/signup', {
+        const response = await fetch('/auth/signup', {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -95,7 +95,7 @@
     }
 
     async function handleSignin() {
-        const response = await fetch('/user/signin', {
+        const response = await fetch('/auth/signin', {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",

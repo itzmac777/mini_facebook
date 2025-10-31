@@ -5,11 +5,11 @@ module.exports = (req, res, next) => {
   const token = req?.cookies?.token
   if (!token) {
     //No token
-    return res.redirect("/login")
+    return res.redirect("/auth")
   }
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) return res.send("Some error occured")
-    req.user = decoded._doc
+    req.user = decoded
   })
   next()
 }
