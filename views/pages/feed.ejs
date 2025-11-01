@@ -12,12 +12,12 @@
     </div>
 </div>
 <div class="post-display-container">
-        <% posts.forEach((post)=> { %>
+        <% posts?.forEach((post)=> { %>
             <div class="post">
                 <div class="post-name"><%= post?.title %></div>
                 <div class="post-content"><%= post?.content %></div>
                 <div class="post-posted-by">Posted By: <%= post?.author?.name %></div>
-                <% if(post.author._id == user._id){ %>
+                <% if(post?.author?._id == user?._id){ %>
                     <button postId=<%= `${post.id}` %> class="delete-post-btn">Delete</button>
                     <button postId=<%= `${post.id}` %> class="edit-post-btn">Edit</button>
                 <% } %>
@@ -26,16 +26,23 @@
 </div>
 <div>
     <a href="/profile">Go to profile</a>
+    <a href="/people">Find People</a>
+    <input type="checkbox" <% if(publicPost){ %> checked <% } %> name="toggle-friend-public-input" id="toggle-friend-public-input">Show Public Posts</div>
 </div>
 
 <script>
     const postTitleContainer = document.getElementById("create-post-title")
     const postContentContainer = document.getElementById("create-post-content")
     const createPostBtn = document.getElementById("create-post-btn")
+    const friendsOnlyPostInput = document.getElementById("toggle-friend-public-input")
 
     const deletePostBtnCollection = document.querySelectorAll(".delete-post-btn")
     const editPostBtnCollection = document.querySelectorAll(".edit-post-btn")
 
+    friendsOnlyPostInput.addEventListener('change', async(e)=> {
+        e.target.setAttribute('disabled', true)
+        await handleFriendsOnlyCheckbox(e)
+    })
 
     createPostBtn.addEventListener('click', (e)=> {
         if(postContentContainer?.value?.trim() == '' || postTitleContainer?.value?.trim() == ''){
@@ -83,5 +90,24 @@
             return alert(result.msg)
         }
         window.location.href = '/'
+    }
+
+    async function handleFriendsOnlyCheckbox(e) {
+        const response = await fetch(`/user/preference/`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                publicPost: e.target.checked
+            })
+        });
+        const result = await response.json();
+        if(!result.success){
+            e.target.checked = false;
+            return alert(result.msg)
+        }
+        e.target.removeAttribute('disabled');
+        window.location.reload()
     }
 </script>

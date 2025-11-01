@@ -1,0 +1,86 @@
+<div class="request-sent-received-container">
+    <div class="request-sent-container">
+        <h3>Sent Requests</h3>
+        <div>
+            <% requestSentData?.forEach((user)=> { %>
+                <div class="people-info-container">
+                    <div class="people-name"><%= user?.name %></div>
+                    <div class="post-content"><%= user?.email %></div>
+                    <% if(true){ %>
+                        <button userId=<%= `${user._id}` %> class="cancel-request-btn">Cancel Request</button>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+    <div class="request-received-container">
+        <h3>Received Requests</h3>
+        <div>
+            <% requestReceivedData?.forEach((user)=> { %>
+                <div class="people-info-container">
+                    <div class="people-name"><%= user?.name %></div>
+                    <div class="post-content"><%= user?.email %></div>
+                    <% if(true){ %>
+                        <button userId=<%= `${user._id}` %> class="confirm-request-btn">Confirm</button>
+                        <button userId=<%= `${user._id}` %> class="reject-request-btn">Reject</button>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cancelRequestBtn = document.querySelectorAll(".cancel-request-btn");
+    const confirmRequestBtn = document.querySelectorAll(".confirm-request-btn");
+    const rejectRequestBtn = document.querySelectorAll(".reject-request-btn");
+
+
+    cancelRequestBtn.forEach(btn=> btn.addEventListener('click', e=> {
+        const userId = e.target.getAttribute('userId') 
+        if(!userId) return alert("User does't exists");
+        handleCancelRequest(userId)
+    }))
+
+    confirmRequestBtn.forEach(btn=> btn.addEventListener('click', e=> {
+        const userId = e.target.getAttribute('userId') 
+        if(!userId) return alert("User does't exists");
+        handleConfirmRequest(userId)
+    }))
+
+    rejectRequestBtn.forEach(btn=> btn.addEventListener('click', e=> {
+        const userId = e.target.getAttribute('userId') 
+        if(!userId) return alert("User does't exists");
+        handleCancelRequest(userId)
+    }))
+
+    async function handleCancelRequest(userId) {
+        const response = await fetch(`/friend/request`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ userId }),
+        });
+        const result = await response.json();
+        if(!result?.success){
+            return alert(result?.msg)
+        }
+        window.location.reload()
+    }
+
+    async function handleConfirmRequest(userId) {
+        const response = await fetch(`/friend/request`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ userId }),
+        });
+        const result = await response.json();
+        if(!result?.success){
+            return alert(result?.msg)
+        }
+        window.location.reload()
+    }
+</script>

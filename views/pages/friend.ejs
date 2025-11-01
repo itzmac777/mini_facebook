@@ -1,0 +1,9 @@
+<div class="friends-display-container">
+        <% friendsData?.forEach((friend, index)=> { %>
+            <h3>Friend: <%= index + 1 %></h3>
+            <div class="friend">
+                <div class="friend-name"><%= friend?.name %></div>
+                <div class="friend-email"><%= friend?.email %></div>
+            </div>
+        <% }); %>
+</div>

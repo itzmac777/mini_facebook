@@ -1,0 +1,36 @@
+<div class="display-people-container">
+    Find people
+    <% usersData?.forEach((user)=> { %>
+        <div class="people-info-container">
+            <div class="people-name"><%= user?.name %></div>
+            <div class="post-content"><%= user?.email %></div>
+            <% if(true){ %>
+                <button userId=<%= `${user._id}` %> class="add-friend-btn">Add Friend</button>
+            <% } %>
+        </div>
+    <% }); %>
+    <% if (usersData?.length < 1) { %>
+        <div>
+            No people to add, you are up!
+        </div>
+    <% } %>
+    <a href="/friend/request">My requests</a>
+    <a href="/friend">My friends</a>
+</div>
+
+<script>
+    const addFriendBtns = document.querySelectorAll('.add-friend-btn');
+    
+    addFriendBtns?.forEach(btn=> btn.addEventListener('click', (e)=> {
+        const userId = e.target.getAttribute('userId')
+        if(!userId) return alert('Some error occured, please refresh the page!')
+        handleFriendRequest(userId)
+    }))
+
+    async function handleFriendRequest(userId){
+        const response = await fetch(`/friend/add/${userId}`);
+        const result = await response.json();
+        if(!result?.success) return alert(result.msg)
+        window.location.href = '/friend/request'
+    }
+</script>
