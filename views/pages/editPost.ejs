@@ -1,21 +1,26 @@
-<div class="edit-post-container">
-    <div class="input-label-container">
-        <input value=<%= post.content %> type="text" id="edit-post-content">
+<div class="container">
+    <div class="container">
         <label for="edit-post-content">Content</label>
+        <input class="form-control" value='<%= post.content %>' type="text" id="edit-post-content">
     </div>
-    <div class="edit-btn-container">
-        <button postId=<%= post.id %> id="edit-post-btn">Edit</button>
+    <div class="container">
+        <button class="btn color-white btn-sm bg-theme mt-3" postId=<%= post.id %> id="edit-post-btn">Edit</button>
     </div>
 </div>
 
 <script>
     const editContentContainer = document.getElementById("edit-post-content")
     const editPostBtn = document.getElementById("edit-post-btn")
-
+    const alertContainer = document.querySelector('.alert')
 
     editPostBtn.addEventListener("click", e=> {
         if(editContentContainer?.value?.trim() == ''){
-            return alert("Post contents cannot be empty")
+             alertContainer.textContent = "Post Cannot be empty";
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         handleEditPost(e.target.getAttribute('postId'))
     })
@@ -32,7 +37,12 @@
         });
         const result = await response.json();
         if(!result.success){
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         window.location.href = '/'
     }

@@ -10,15 +10,15 @@
 
 <div class="container">
     <% requestSentData?.forEach((user)=> { %>
-        <div class="container bg-white rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
-            <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
+        <div class="container bg-white flex-wrap flex-md-nowrap rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
+            <div class="container d-flex align-items-center">
+                <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
                 <img src="/img/default-user.png" width="20" alt="">
             </div>
             <div class="container d-flex" style="word-break: break-all;"><%= user?.name %></div>
-            <div class="container d-flex justify-content-end">
-                <button class="btn-sm color-white bg-theme cancel-request-btn btn" userId=<%= `${user._id}` %>>
-                    Cancel Request
-                </button>
+            </div>
+            <div class="container d-flex justify-content-start justify-content-md-end justify-content-lg-end gap-3">
+                <button class="cancel-request-btn btn-sm color-white bg-theme btn" userId=<%= `${user._id}` %> >Cancel Request</button>
             </div>
         </div>
     <% }); %>
@@ -37,12 +37,14 @@
 
 <div class="container">
     <% requestReceivedData?.forEach((user)=> { %>
-        <div class="container bg-white rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
-            <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
+        <div class="container bg-white flex-wrap flex-md-nowrap rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
+            <div class="container d-flex align-items-center">
+                <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
                 <img src="/img/default-user.png" width="20" alt="">
             </div>
             <div class="container d-flex" style="word-break: break-all;"><%= user?.name %></div>
-            <div class="container d-flex justify-content-end gap-3">
+            </div>
+            <div class="container d-flex justify-content-start justify-content-md-end justify-content-lg-end gap-3">
                 <button class="confirm-request-btn btn-sm color-white bg-theme btn" userId=<%= `${user._id}` %> >Confirm</button>
                 <button class="reject-request-btn btn-sm color-white bg-theme btn" userId=<%= `${user._id}` %> >Reject</button>
             </div>
