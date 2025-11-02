@@ -1,43 +1,79 @@
-<div class="create-post-container">
-    <div class="input-label-container">
-        <input type="text" id="create-post-title">
-        <label for="create-post-title">Title</label>
+
+<div class="container gap-2 rounded-2 d-flex flex-column align-items-start custon-post-modal-container p-2">
+    <div class="container gap-2 rounded-2 d-flex align-items-center custon-post-modal-container p-2">
+        <div class="rounded-circle bg-custom-primary p-3 d-flex align-items-center justify-content-center">
+            <img src="/img/default-user.png" width="20" alt="">
+        </div>
+        <button class="btn p-2 px-3 d-flex justify-content-start w-100 bg-custom-primary rounded-pill custom-post-modal-btn" data-bs-toggle="modal" data-bs-target="#staticBackdrop">What's on your mind, <%= user.name %></button>
     </div>
-    <div class="input-label-container">
-        <input type="text" id="create-post-content">
-        <label for="create-post-content">Content</label>
-    </div>
-    <div class="post-btn-container">
-        <button id="create-post-btn">Post</button>
+    <div class="mx-3 container d-flex gap-3 container from-check form-switch">
+        <input class="form-check-input" role="switch" type="checkbox" <% if(publicPost){ %> checked <% } %> name="toggle-friend-public-input" id="toggle-friend-public-input">
+        <label for="toggle-friend-public-input" class="form-check-label">Show public posts</label>
     </div>
 </div>
-<div class="post-display-container">
-        <% posts?.forEach((post)=> { %>
-            <div class="post">
-                <div class="post-name"><%= post?.title %></div>
-                <div class="post-content"><%= post?.content %></div>
-                <div class="post-posted-by">Posted By: <%= post?.author?.name %></div>
-                <% if(post?.author?._id == user?._id){ %>
-                    <button postId=<%= `${post.id}` %> class="delete-post-btn">Delete</button>
-                    <button postId=<%= `${post.id}` %> class="edit-post-btn">Edit</button>
-                <% } %>
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="container d-flex align-items-center justify-content-center">
+                <div style="display: none;" class="alert modal-alert alert-warning w-70 m-3" role="alert">
+                    Something's wrong!
+                </div>
             </div>
-        <% }); %>
-</div>
-<div>
-    <a href="/profile">Go to profile</a>
-    <a href="/people">Find People</a>
-    <input type="checkbox" <% if(publicPost){ %> checked <% } %> name="toggle-friend-public-input" id="toggle-friend-public-input">Show Public Posts</div>
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Create Post</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body container d-flex justify-content-center align-items-center">
+                <textarea class="form-control" rows="3" id="create-post-content" placeholder="What's on your mind, <%= user.name %>"></textarea>
+            </div>
+            <div class="p-3 d-flex align-items-center justify-content-center">
+                <button type="button" id="create-post-btn" class="w-50 btn bg-theme color-white border-none">Post</button>
+            </div>
+        </div>
+    </div>
 </div>
 
+
+
+<div class="h5 mt-5">Posts</div>
+<div>
+    <% posts?.forEach((post)=> { %>
+        <div class="d-flex flex-column align-items-start m-4 bg-white rounded-3 p-3">
+            <div class="d-flex justify-content-between w-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
+                        <img src="/img/default-user.png" width="20" alt="">
+                    </div>
+                    <a href='/user/<%= post?.author?._id %>'><div class="lead"><%= post?.author?.name %></div></a>
+                </div>
+                <% if(post?.author?._id == user?._id.toString()){ %>
+                    <div class="dropdown">
+                        <button class="btn btn-sm bg-theme dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><button class="btn delete-post-btn" postId=<%= `${post.id}` %>>Delete</button></li>
+                            <li><button class="btn edit-post-btn" postId=<%= `${post.id}` %>>Edit</button></li>
+                        </ul>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="mx-5 my-2"><%= post?.content %></div>
+        </div>
+    <% }); %>
+</div>
+
+
 <script>
-    const postTitleContainer = document.getElementById("create-post-title")
     const postContentContainer = document.getElementById("create-post-content")
     const createPostBtn = document.getElementById("create-post-btn")
     const friendsOnlyPostInput = document.getElementById("toggle-friend-public-input")
-
+    const modalAlertContainer = document.querySelector('.modal-alert')
+    const alertContainer = document.querySelector('.alert')
     const deletePostBtnCollection = document.querySelectorAll(".delete-post-btn")
     const editPostBtnCollection = document.querySelectorAll(".edit-post-btn")
+
 
     friendsOnlyPostInput.addEventListener('change', async(e)=> {
         e.target.setAttribute('disabled', true)
@@ -45,8 +81,13 @@
     })
 
     createPostBtn.addEventListener('click', (e)=> {
-        if(postContentContainer?.value?.trim() == '' || postTitleContainer?.value?.trim() == ''){
-            return alert("Post contents cannot be empty")
+        if(postContentContainer?.value?.trim() == ''){
+            modalAlertContainer.textContent = "Post contents cannot be empty";
+            modalAlertContainer.style.display = 'block'
+            setTimeout(()=> {
+                modalAlertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         handleCreatePost()
     })
@@ -54,6 +95,7 @@
     deletePostBtnCollection?.forEach(btn=> btn.addEventListener('click', e=> {
         handleDeletePost(e.target.getAttribute('postId'))
     }))
+
 
     editPostBtnCollection?.forEach(btn=> btn.addEventListener('click', e=> {
         handleEditPost(e.target.getAttribute('postId'))
@@ -65,7 +107,12 @@
         });
         const result = await response.json();
         if(!result.success){
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         window.location.href = '/'
     }
@@ -81,13 +128,17 @@
                 "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({
-                title: postTitleContainer.value,
                 content: postContentContainer.value
             })
         });
         const result = await response.json();
         if(!result.success){
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         window.location.href = '/'
     }
@@ -105,7 +156,12 @@
         const result = await response.json();
         if(!result.success){
             e.target.checked = false;
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         e.target.removeAttribute('disabled');
         window.location.reload()

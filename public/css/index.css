@@ -1,0 +1,53 @@
+.bg-theme{
+    background-color: #97a87a;
+}
+
+.bg-custom-primary{
+    background-color: rgba(189, 189, 189, 0.164)
+}
+
+.bg-custom-primary-dark{
+    background-color: rgba(189, 189, 189, 0.295)
+}
+
+.border-none{
+    border: none;
+}
+
+.color-theme{
+    color: #97a87a;
+}
+
+.color-black{
+    color: black;
+}
+
+.color-white{
+    color: white;
+}
+
+.active-theme{
+    border-bottom: .2rem solid #97a87a;
+    border-bottom-left-radius: .2rem;
+}
+
+.nav-link{
+    transition: .1s linear all;
+}
+
+
+.nav-link:not(.active-theme):hover{
+    border-bottom: .2rem solid #97a87a36;
+}
+
+.nav-link:hover{
+    color: black;
+}
+
+.custon-post-modal-container{
+    background-color: white;
+}
+
+a{
+    text-decoration: none;
+}

@@ -1,12 +1,27 @@
-<div class="display-people-container">
-    Find people
+<div class="d-flex justify-content-between align-items-center">
+    <div class="container h5">
+        People you may know!
+    </div>
+    <div class="container d-flex flex-column align-items-end flex-md-row flex-lg-row justify-content-md-end align-items-md-start gap-3">
+        <div><a href="/friend/request">My requests</a></div>
+        <div><a href="/friend">My friends</a></div>
+    </div>
+</div>
+
+<div class="container">
     <% usersData?.forEach((user)=> { %>
-        <div class="people-info-container">
-            <div class="people-name"><%= user?.name %></div>
-            <div class="post-content"><%= user?.email %></div>
-            <% if(true){ %>
-                <button userId=<%= `${user._id}` %> class="add-friend-btn">Add Friend</button>
-            <% } %>
+        <div class="container bg-white rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
+            <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
+                <img src="/img/default-user.png" width="20" alt="">
+            </div>
+            <div class="container d-flex" style="word-break: break-all;">
+                <a href="/user/<%= user?._id %>"><%= user?.name %></a>
+            </div>
+            <div class="container d-flex justify-content-end">
+                <button class="btn-sm color-white bg-theme add-friend-btn btn" userId=<%= `${user._id}` %>>
+                    Add Friend
+                </button>
+            </div>
         </div>
     <% }); %>
     <% if (usersData?.length < 1) { %>
@@ -14,23 +29,36 @@
             No people to add, you are up!
         </div>
     <% } %>
-    <a href="/friend/request">My requests</a>
-    <a href="/friend">My friends</a>
 </div>
 
 <script>
+    const alertContainer = document.querySelector('.alert')
     const addFriendBtns = document.querySelectorAll('.add-friend-btn');
     
     addFriendBtns?.forEach(btn=> btn.addEventListener('click', (e)=> {
         const userId = e.target.getAttribute('userId')
-        if(!userId) return alert('Some error occured, please refresh the page!')
+        if(!userId){
+            alertContainer.textContent = 'Some error occured, please refresh the page!';
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
+        }
         handleFriendRequest(userId)
     }))
 
     async function handleFriendRequest(userId){
         const response = await fetch(`/friend/add/${userId}`);
         const result = await response.json();
-        if(!result?.success) return alert(result.msg)
+        if(!result?.success) {
+            alertContainer.textContent = result.msg
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
+        }
         window.location.href = '/friend/request'
     }
 </script>

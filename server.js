@@ -23,6 +23,7 @@ app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
+app.use(express.static(path.join(__dirname, "/public")))
 dotenv.config()
 
 //===============DB & SERVER CONNECTION===============//
@@ -36,6 +37,10 @@ app.get("/", isLoggedIn, async (req, res) => {
 })
 app.get("/profile", isLoggedIn, (req, res) => {
   wrapTC(req, res, handleProfilePage)
+})
+
+app.get("/user/:id", isLoggedIn, (req, res) => {
+  wrapTC(req, res, handleProfileVisit)
 })
 
 //AUTH ROUTES
@@ -117,14 +122,13 @@ async function handlePostEdit(req, res) {
   if (!postId) {
     return res.json({ success: false, msg: "Unsuccessful edit" })
   }
-  if (!newPostData.title.trim() || !newPostData.content.trim()) {
+  if (!newPostData.content.trim()) {
     return res.json({ success: false, msg: "Posts content cannot be empty" })
   }
   const postData = await Post.findById(postId)
   if (postData.author.toString() != req.user._id) {
     return res.json({ success: false, msg: "Not authorized" })
   }
-  postData.title = newPostData.title
   postData.content = newPostData.content
   await postData.save()
   return res.json({ success: true, msg: "Edited successfully" })
@@ -137,7 +141,7 @@ async function handleFeedPage(req, res) {
     const posts = await Post.find().populate("author", "-hash")
     return res.render("boilerplate.ejs", {
       page: "feed",
-      user: req.user,
+      user: currentUser,
       posts,
       publicPost,
     })
@@ -149,7 +153,7 @@ async function handleFeedPage(req, res) {
   }).populate("author", "-hash")
   return res.render("boilerplate.ejs", {
     page: "feed",
-    user: req.user,
+    user: currentUser,
     posts,
     publicPost,
   })
@@ -165,11 +169,10 @@ async function handlePostCreate(req, res) {
   const author = await User.findById(req.user._id)
   if (postData == null)
     return res.json({ success: false, msg: "Posts cannot be empty" })
-  if (!postData?.title.trim() || !postData?.content.trim())
+  if (!postData?.content.trim())
     return res.json({ success: false, msg: "Posts cannot be empty" })
   const newPostData = await Post.insertMany([
     {
-      title: postData.title,
       content: postData.content,
       author: author._id,
     },
@@ -459,4 +462,15 @@ async function handleUserPreference(req, res) {
 
   await User.findByIdAndUpdate(req.user._id, updateFields)
   return res.json({ success: true })
+}
+
+async function handleProfileVisit(req, res) {
+  const searchData = await User.findById(req?.params?.id).select("-hash")
+  if (!searchData) {
+    return res.send("Profile Not found")
+  }
+  return res.render("boilerplate.ejs", {
+    page: "visitProfile",
+    profileData: searchData,
+  })
 }

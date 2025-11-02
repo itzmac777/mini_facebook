@@ -1,0 +1,34 @@
+<nav class="navbar bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex gap-2 align-items-center" href="/">
+      <img src="/img/brand-logo.png" alt="Logo" width="40" class="d-inline-block align-text-top ">
+      Mini FB Prototype
+    </a>
+    <ul id="nav-options" class="nav nav-underline">
+        <li class="nav-item">
+            <a class="nav-link" href="/">Feed</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/people">People</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/profile">Profile</a>
+        </li>
+    </ul>
+  </div>
+</nav>
+
+<script>
+    const navOptions = document.getElementById("nav-options");
+    if(window.location.pathname === '/auth'){
+        navOptions.style.display = 'none'
+    }
+    setCurrentActiveNav()
+    function setCurrentActiveNav(){
+        const currentPageNavElem = document.querySelector(`li [href='${window.location.pathname}']`)
+        document.querySelectorAll("#nav-options li")?.forEach(el=> {
+            el.classList.remove('active')
+        })
+        currentPageNavElem?.classList?.add('active')
+    }
+</script>

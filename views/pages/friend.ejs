@@ -1,9 +1,13 @@
-<div class="friends-display-container">
-        <% friendsData?.forEach((friend, index)=> { %>
-            <h3>Friend: <%= index + 1 %></h3>
-            <div class="friend">
-                <div class="friend-name"><%= friend?.name %></div>
-                <div class="friend-email"><%= friend?.email %></div>
-            </div>
-        <% }); %>
+
+
+<% friendsData?.forEach((friend, index)=> { %>
+<div class="container bg-white rounded-3 my-3 p-2 d-flex flex-md-row align-items-center justify-content-between gap-3">
+    <div class="rounded-circle bg-custom-primary p-2 d-flex align-items-center justify-content-center">
+        <img src="/img/default-user.png" width="20" alt="">
+    </div>
+    <div class="container d-flex" style="word-break: break-all;"><%= friend.name %></div>
+    <div class="container d-flex justify-content-end">
+        <a href='/user/<%= friend._id %>'>Check Profile</a>
+    </div>
 </div>
+<% }); %>

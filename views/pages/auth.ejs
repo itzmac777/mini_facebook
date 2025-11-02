@@ -1,47 +1,84 @@
-<div class="form-container">
-    <div class="form-selector-container">
-        <input type="radio" checked name="form-selector" id="signin">
-        <label for="signin">Sign In</label>
-        <input type="radio" name="form-selector" id="signup">
-        <label for="signup">Sign Up</label>
+<div class="form-container min-vh-100 d-flex flex-column align-items-center justify-content-center">
+    <div class="nav container-sm w-50 mb-4 d-flex form-selector-container">
+        <li class="nav-item">
+            <input style="display: none;" type="radio" checked name="form-selector" id="signin">
+            <label class="nav-link active-theme color-black" for="signin">Sign In</label>
+        </li>
+        <li class="nav-item">
+            <input style="display: none;" type="radio" name="form-selector" id="signup">
+            <label class="nav-link color-black" for="signup">Sign Up</label>
+        </li>
     </div>
-    <div style="display: none;" class="signup-form">
-        <div class="input-label-container">
-            <label for="signup-name">Name</label>
-            <input id="signup-name" type="text" placeholder="Name">
+    <form style="display: none;" id="sign-up" class="needs-validation container-sm w-50 signup-form row g-3 align-items-center" novalidate>
+        <div>
+            <label class="form-label" for="signup-name">Email address</label>
+            <input required class="form-control" id="signup-name" type="text" placeholder="John Doe">
+            <div class="invalid-feedback">
+                Please enter a name
+            </div>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
         </div>
-        <div class="input-label-container">
-            <label for="signup-email">Email</label>
-            <input id="signup-email" type="text" placeholder="Email">
+        <div>
+            <label class="form-label" for="signup-email">Password</label>
+            <input required class="form-control" id="signup-email" type="email" placeholder="name@example.com">
+            <div class="invalid-feedback">
+                Please enter a valid email
+            </div>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
         </div>
-        <div class="input-label-container">
-            <label for="signup-password">Password</label>
-            <input id="signup-password" type="text" placeholder="Password">
+        <div>
+            <label class="form-label" for="signup-password">Password</label>
+            <input required class="form-control" id="signup-password" type="password" placeholder="">
+            <div id="passwordHelpBlock" class="form-text">
+                Your password must be 8-20 characters long, contain letters and numbers, and must not contain spaces, special characters, or emoji.
+            </div>
+            <div class="invalid-feedback">
+                Please enter a password
+            </div>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
         </div>
-        <div class="signup-btn-container">
-            <button id="signup-btn">Sign Up</button>
+        <div >
+            <button class="btn btn-md btn-secondary bg-theme border-none" id="signup-btn">Sign Up</button>
         </div>
-    </div>
-    <div class="signin-form">
-        <div class="input-label-container">
-            <label for="signin-email">Email</label>
-            <input id="signin-email" type="text" placeholder="Email">
+    </form>
+    <form id="sign-in" class="needs-validation container-sm w-50 signin-form row g-3 align-items-center" novalidate>
+        <div>
+            <label class="form-label" for="signin-email">Email address</label>
+            <input class="form-control" required id="signin-email" type="email" placeholder="name@example.com">
+            <div class="invalid-feedback">
+                Please enter a valid email
+            </div>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
         </div>
-        <div class="input-label-container">
-            <label for="signin-password">Password</label>
-            <input id="signin-password" type="text" placeholder="Password">
+        <div>
+            <label class="form-label" for="signin-password">Password</label>
+            <input required class="form-control" id="signin-password" type="password" placeholder="Password">
+            <div class="invalid-feedback">
+                Please enter a password
+            </div>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
         </div>
-        <div class="signin-btn-container">
-            <button id="signin-btn">Sign In</button>
+        <div >
+            <button class="btn btn-md btn-secondary bg-theme border-none" id="signin-btn">Sign In</button>
         </div>
-    </div>
+    </form>
 </div>
 
 <script>
     const signupFormContainer = document.querySelector('.signup-form')
     const signinFormContainer = document.querySelector('.signin-form')
     const formSelectorInput = document.querySelectorAll(".form-selector-container input")
-
+    const alertContainer = document.querySelector('.alert')
     const signupBtn = document.getElementById('signup-btn')
     const signupName = document.getElementById('signup-name')
     const signupEmail = document.getElementById('signup-email')
@@ -56,23 +93,26 @@
         updateFormState(e.target.id)
     }))
 
-    signupBtn.addEventListener('click', async(e)=> {
-        if(signupName.value.trim() == '' 
-            || signupEmail.value.trim() == ''
-            || signupPassword.value.trim() == ''
-        ){
-            return alert("Credentials cannot be empty")
-        }
-        handleSignup()
-    })
 
-    signinBtn.addEventListener('click', async(e)=> {
-        if( signinEmail.value.trim() == ''
-            || signinPassword.value.trim() == ''
-        ){
-            return alert("Credentials cannot be empty")
+    const forms = document.querySelectorAll('.needs-validation')
+
+  // Loop over them and prevent submission
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+        } else{
+            event.preventDefault();
+            if(form.id === "sign-in"){
+                handleSignin()
+            } else{
+                handleSignup()
+            }
         }
-        handleSignin()
+
+        form.classList.add('was-validated')
+        }, false)
     })
 
     async function handleSignup() {
@@ -89,7 +129,12 @@
         });
         const result = await response.json();
         if(!result.success){
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         window.location.href = '/'
     }
@@ -106,14 +151,27 @@
             })
         });
         const result = await response.json();
-        console.log(response.json)
         if(!result.success){
-            return alert(result.msg)
+            alertContainer.textContent = result.msg;
+            alertContainer.style.display = 'block'
+            setTimeout(()=> {
+                alertContainer.style.display = 'none'
+            }, 3000)
+            return;
         }
         window.location.href = '/'
     }
-
+    
     function updateFormState(id){
+        const allLabels = document.querySelectorAll(`.nav-item label`);
+        const activeLabel = document.querySelector(`.nav-item label[for=${id}]`);
+        
+        allLabels?.forEach(label=> {
+            label?.classList?.remove('active-theme');
+        })
+        
+        activeLabel?.classList?.add('active-theme')
+
         if(id == 'signup'){
             signinFormContainer.style.display = 'none';
             signupFormContainer.style.display = 'block';
